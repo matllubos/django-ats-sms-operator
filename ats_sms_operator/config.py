@@ -6,9 +6,9 @@ from django.utils.translation import ugettext_lazy as _
 from chamber.utils.datastructures import ChoicesNumEnum
 
 
-# TODO remove the try-except once old is-core does not have to be supported
 try:
-    from django.apps import get_model
+    from django.apps import apps
+    get_model = apps.get_model
 except ImportError:
     from django.db.models.loading import get_model
 
