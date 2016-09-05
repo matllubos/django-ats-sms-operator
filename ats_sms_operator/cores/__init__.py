@@ -1,46 +1,49 @@
 from __future__ import unicode_literals
 
-# TODO remove the try-except once old is-core does not have to be supported
-try:
-    from is_core.main import UIRESTModelISCore
-except ImportError:
-    from is_core.main import UIRestModelISCore as UIRESTModelISCore
+from django.conf import settings
 
+from is_core.main import UIRESTModelISCore
 
 from ats_sms_operator import config
+from ats_sms_operator.sender import send
 
 
 class InputATSSMSmessageISCore(UIRESTModelISCore):
+
     model = config.get_input_sms_model()
     list_display = ('created_at', 'received_at', 'sender', 'recipient', 'uniq', 'content')
     abstract = True
     form_fields = ('created_at', 'received_at', 'sender', 'recipient', 'uniq', 'okey', 'opid', 'opmid', 'content')
-
-    def has_create_permission(self, request, obj=None):
-        return False
-
-    def has_update_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
+    create_permission = False
+    update_permission = False
+    delete_permission = False
 
 
 class OutputATSSMSmesssageISCore(UIRESTModelISCore):
+
     model = config.get_output_sms_model()
     list_display = ('created_at', 'sent_at', 'sender', 'recipient', 'content', 'state')
     abstract = True
+    update_permission = False
+    delete_permission = False
 
-    def has_create_permission(self, request, obj=None):
-        return False
+    def get_ui_form_fields(self, request, obj=None):
+        return (
+            super(OutputATSSMSmesssageISCore, self).get_ui_form_fields(request, obj=obj)
+            if obj else ('recipient', 'content')
+        )
 
-    def has_update_permission(self, request, obj=None):
-        return False
+    def pre_save_model(self, request, obj, form, change):
+        obj.state = (
+            config.ATS_STATES.DEBUG if settings.ATS_SMS_DEBUG and obj.recipient not in config.ATS_WHITELIST
+            else config.ATS_STATES.PROCESSING
+        )
 
-    def has_delete_permission(self, request, obj=None):
-        return False
+    def post_save_model(self, request, obj, form, change):
+        send(obj)
 
 
 class SMSTemplateISCore(UIRESTModelISCore):
+
     model = config.get_sms_template_model()
     abstract = True
