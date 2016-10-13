@@ -34,10 +34,11 @@ setup(
         'html5lib>=0.999999',
         'django-ipware>=1.0.0',
         'requests==2.9.0',
-        'django-chamber>=0.1.18',
+        'django-chamber>=0.1.22',
+        'django-phonenumber-field==1.1.0',
     ],
     dependency_links=[
-        'https://github.com/druids/django-chamber/tarball/0.1.18#egg=django-chamber-0.1.18',
+        'https://github.com/druids/django-chamber/tarball/0.1.22#egg=django-chamber-0.1.22',
     ],
     zip_safe=False,
 )

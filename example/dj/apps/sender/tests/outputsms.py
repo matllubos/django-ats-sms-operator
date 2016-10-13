@@ -19,7 +19,7 @@ from germanium.tools import assert_equal, assert_false, assert_is_not_none, asse
 from ats_sms_operator.config import ATS_STATES
 from ats_sms_operator.sender import (SMSSendingError, SMSValidationError, parse_response_codes,
                                      send_and_update_sms_states, send_ats_requests, send_template,
-                                     serialize_ats_requests)
+                                     serialize_ats_requests, send, send_multiple)
 
 from sender.models import OutputSMS
 
@@ -273,3 +273,33 @@ class OutputSMSTestCase(TestCase):
         assert_raises(SMSSendingError, send_template, '+420777111222', slug='test',
                       context={'variable': 'context works'}, pk=245)
         assert_equal(OutputSMS.objects.get(pk=245).state, ATS_STATES.LOCAL_TO_SEND)
+
+    @responses.activate
+    def test_send_for_unavailable_service(self):
+        def raise_exception(request):
+            raise requests.exceptions.HTTPError()
+
+        sms = OutputSMSFactory(state=ATS_STATES.PROCESSING, **self.ATS_OUTPUT_SMS1)
+
+        assert_raises(SMSSendingError, send, sms)
+
+    @responses.activate
+    def test_send_multiple_for_unavailable_service(self):
+        def raise_exception(request):
+            raise requests.exceptions.HTTPError()
+
+        sms = OutputSMSFactory(state=ATS_STATES.PROCESSING, **self.ATS_OUTPUT_SMS2)
+        send_multiple(sms)
+        assert_equal(OutputSMS.objects.get(pk=sms.pk).state, ATS_STATES.LOCAL_TO_SEND)
+
+    @responses.activate
+    def test_send_multiple_with_only_one_uniq_status_code(self):
+        sms1 = OutputSMSFactory(pk=self.ATS_TEST_UNIQ['uniq1'], state=ATS_STATES.PROCESSING, **self.ATS_OUTPUT_SMS1)
+        sms2 = OutputSMSFactory(pk=self.ATS_TEST_UNIQ['uniq2'], state=ATS_STATES.PROCESSING, **self.ATS_OUTPUT_SMS2)
+        responses.add(responses.POST, settings.ATS_URL, content_type='text/xml',
+                      body=self.ATS_SINGLE_SMS_REQUEST_RESPONSE_SENT.format(self.ATS_TEST_UNIQ['uniq1']),
+                      status=200)
+        send_multiple(sms1, sms2)
+        assert_equal(OutputSMS.objects.get(pk=sms1.pk).state, ATS_STATES.OK)
+        assert_equal(OutputSMS.objects.get(pk=sms2.pk).state, ATS_STATES.LOCAL_TO_SEND)
+

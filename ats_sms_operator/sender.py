@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext
 
-from chamber.shortcuts import get_object_or_none
+from chamber.shortcuts import get_object_or_none, change_and_save, bulk_change_and_save
 
 from ats_sms_operator import logged_requests as requests
 from ats_sms_operator import config
@@ -121,9 +121,10 @@ def update_sms_states(parsed_response):
     for uniq, state in parsed_response.items():
         sms = get_object_or_none(config.get_output_sms_model(), pk=uniq)
         if sms:
-            sms.state = state if state in config.ATS_STATES.all else config.ATS_STATES.LOCAL_UNKNOWN_ATS_STATE
-            sms.sent_at = timezone.now()
-            sms.save()
+            change_and_save(
+                sms, state=state if state in config.ATS_STATES.all else config.ATS_STATES.LOCAL_UNKNOWN_ATS_STATE,
+                sent_at=timezone.now()
+            )
         else:
             raise SMSValidationError(ugettext('SMS with uniq "{}" not found in DB.').format(uniq))
 
@@ -144,6 +145,22 @@ def send_and_update_sms_states(*ats_requests):
     update_sms_states(send_and_parse_response(*ats_requests))
 
 
+def send_multiple(*multiple_output_sms):
+    mutiple_output_sms_to_sent = [
+        output_sms for output_sms in multiple_output_sms if output_sms.state == config.ATS_STATES.PROCESSING
+    ]
+    try:
+        parsed_response = send_and_parse_response(*mutiple_output_sms_to_sent)
+        for output_sms in mutiple_output_sms_to_sent:
+            try:
+                update_sms_state_from_response(output_sms, parsed_response)
+                output_sms.save()
+            except SMSSendingError:
+                change_and_save(output_sms, state=config.ATS_STATES.LOCAL_TO_SEND)
+    except SMSSendingError:
+        bulk_change_and_save(mutiple_output_sms_to_sent, state=config.ATS_STATES.LOCAL_TO_SEND)
+
+
 def send(output_sms):
     try:
         if output_sms.state == config.ATS_STATES.PROCESSING:
@@ -152,8 +169,7 @@ def send(output_sms):
             output_sms.save()
         return output_sms
     except SMSSendingError:
-        output_sms.state = config.ATS_STATES.LOCAL_TO_SEND
-        output_sms.save()
+        change_and_save(output_sms, state=config.ATS_STATES.LOCAL_TO_SEND)
         raise
 
 

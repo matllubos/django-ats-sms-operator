@@ -93,6 +93,9 @@ class AbstractOutputATSSMSmessage(SmartModel):
         verbose_name_plural = _('output ATS messages')
         ordering = ('-created_at',)
 
+    class UIMeta:
+        add_button_verbose_name = _('send new SMS')
+
 
 @python_2_unicode_compatible
 class AbstractSMSTemplate(SmartModel):

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.0.5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-23 14:39+0100\n"
+"POT-Creation-Date: 2016-10-14 10:04+0200\n"
 "Last-Translator: Oskar Hollmann <oskar@hollmann.me>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -15,291 +15,295 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 
-#: config.py:40
+#: config.py:42
 msgid "registration successful"
 msgstr "Registrace telefonního čísla na daném projektu proběhla v pořádku"
 
-#: config.py:41
+#: config.py:43
 msgid "re-registration successful"
 msgstr ""
 "Opětovná registrace telefonního čísla na daném projektu proběhla v pořádku"
 
-#: config.py:43
+#: config.py:45
 msgid "not found"
 msgstr "nenalezena"
 
-#: config.py:44
+#: config.py:46
 msgid "not sent yet"
 msgstr "neodeslána"
 
-#: config.py:45
+#: config.py:47
 msgid "sent"
 msgstr "odeslána"
 
-#: config.py:46
+#: config.py:48
 msgid "delivered"
 msgstr "doručena"
 
-#: config.py:47
+#: config.py:49
 msgid "not delivered"
 msgstr "nedoručena"
 
-#: config.py:48
+#: config.py:50
 msgid "not able to determine the state"
 msgstr "nepodařilo se získat status"
 
-#: config.py:50
+#: config.py:52
 msgid "authentication failed"
 msgstr "nepodařila se autentifikace (username, password, ip)"
 
-#: config.py:52
+#: config.py:54
 msgid "DB error"
 msgstr "DB problém"
 
-#: config.py:54
+#: config.py:56
 msgid "SMS is OK and ready to be sent"
 msgstr "SMS je v pořádku a připravena k odeslání k operátorovi"
 
-#: config.py:55
+#: config.py:57
 msgid "unspecified error"
 msgstr ""
 "nespecifikovaná chyba (xml není validní, xml neobsahuje povinné "
 "elementy, ...)"
 
-#: config.py:56
+#: config.py:58
 msgid "one of the requests has not unique \"uniq\""
 msgstr ""
 "minimálně jedna z operací nemá přidělen unikátní kód (balík byl zahozen)"
 
-#: config.py:57
+#: config.py:59
 msgid "SMS has not unique \"uniq\""
 msgstr "SMS nemá unikátní kód (všechny SMS s tímto kódem byli odmítnuty)"
 
-#: config.py:58
+#: config.py:60
 msgid "SMS lacks keyword"
 msgstr "SMS nemá klíčové slovo"
 
-#: config.py:59
+#: config.py:61
 msgid "keyword not valid"
 msgstr "klíčové slovo dané SMS není povoleno"
 
-#: config.py:60
+#: config.py:62
 msgid "no sender specified"
 msgstr "sender není specifikován"
 
-#: config.py:61
+#: config.py:63
 msgid "sender not valid"
 msgstr "sender není povolen"
 
-#: config.py:62
+#: config.py:64
 msgid "MO PR SMS not allowed"
 msgstr "MO PR SMS není povoleno"
 
-#: config.py:63
+#: config.py:65
 msgid "MT PR SMS not allowed"
 msgstr "MT PR SMS není povoleno"
 
-#: config.py:64
+#: config.py:66
 msgid "MT PR SMS daily limit exceeded"
 msgstr "MT PR SMS denní limit byl překročen"
 
-#: config.py:65
+#: config.py:67
 msgid "MT PR SMS total limit exceeded"
 msgstr "MT PR SMS maximální limit byl překročen"
 
-#: config.py:66
+#: config.py:68
 msgid "geographic number is not allowed"
 msgstr "geografické číslo není povoleno"
 
-#: config.py:67
+#: config.py:69
 msgid "MT SMS to Slovakia not allowed"
 msgstr "MT SK není povoleno"
 
-#: config.py:68
+#: config.py:70
 msgid "shortcodes not allowed"
 msgstr "shortkódy nejsou povoleny"
 
-#: config.py:69
+#: config.py:71
 msgid "sender is unknown"
 msgstr "neznámý sender"
 
-#: config.py:70
+#: config.py:72
 msgid "type of SMS not specified"
 msgstr "nespecifikován typ SMS"
 
-#: config.py:71
+#: config.py:73
 msgid "SMS too long"
 msgstr "SMS je příliš dlouhá"
 
-#: config.py:72
+#: config.py:74
 msgid "too many SMS parts (max. is 10)"
 msgstr "příliš mnoho částí (max 10)"
 
-#: config.py:73
+#: config.py:75
 msgid "wrong number of sender/receiver"
 msgstr "nesprávné číslo příjemce/odesílatele"
 
-#: config.py:74
+#: config.py:76
 msgid "recipient is missing or in wrong format"
 msgstr "Nezadaný recipient nebo špatný formát"
 
-#: config.py:75
+#: config.py:77
 msgid "using \"textid\" is not allowed"
 msgstr "využití \"textid\" není povoleno"
 
-#: config.py:76
+#: config.py:78
 msgid "\"textid\" is in wrong format"
 msgstr "nepovolený tvar \"textid\""
 
-#: config.py:77
+#: config.py:79
 msgid "long SMS with \"textid\" not allowed"
 msgstr "odesílání dlouhých zprav s textid není povoleno"
 
-#: config.py:79
+#: config.py:81
 msgid "XML body missing"
 msgstr "XML není předáno"
 
-#: config.py:80
+#: config.py:82
 msgid "XML is not readable"
 msgstr "XML není čitelné"
 
-#: config.py:81
+#: config.py:83
 msgid "unknown HTTP method or not HTTP POST"
 msgstr "není známa metoda nebo se nejedná o POST"
 
-#: config.py:82
+#: config.py:84
 msgid "XML invalid"
 msgstr "XML není validní"
 
-#: config.py:84
+#: config.py:86
 msgid "ATS returned state not known to us"
 msgstr "ATS vrátilo nám neznámý stav"
 
-#: config.py:85
+#: config.py:87
 msgid "to be sent to ATS"
 msgstr "k poslání do ATS"
 
-#: config.py:86
+#: config.py:88
 msgid "debug SMS"
 msgstr "debug SMS"
 
-#: config.py:87
+#: config.py:89
 msgid "processing"
 msgstr "zpracovává se"
 
-#: config.py:88
+#: config.py:90
 msgid "local error"
 msgstr "lokální chyba"
 
-#: config.py:89
+#: config.py:91
 msgid "timeout"
 msgstr "timeout"
 
-#: models.py:25
+#: models.py:19
 msgid "received at"
 msgstr "odesláno"
 
-#: models.py:26
+#: models.py:20
 msgid "uniq"
 msgstr "unikátní identifikátor"
 
-#: models.py:27 models.py:50
+#: models.py:21 models.py:44
 msgid "sender"
 msgstr "odesílatel"
 
-#: models.py:28 models.py:51
+#: models.py:22 models.py:45
 msgid "recipient"
 msgstr "příjemce"
 
-#: models.py:29
+#: models.py:23
 msgid "okey"
 msgstr "okey"
 
-#: models.py:30
+#: models.py:24
 msgid "opid"
 msgstr "opid"
 
-#: models.py:31 models.py:52
+#: models.py:25 models.py:46
 msgid "opmid"
 msgstr "opmid"
 
-#: models.py:32 models.py:58
+#: models.py:26 models.py:52
 msgid "content"
 msgstr "obsah zprávy"
 
-#: models.py:39
+#: models.py:33
 msgid "input ATS message"
 msgstr "příchozí ATS zpráva"
 
-#: models.py:40
+#: models.py:34
 msgid "input ATS messages"
 msgstr "příchozí ATS zprávy"
 
-#: models.py:49
+#: models.py:43
 msgid "sent at"
 msgstr "posláno v"
 
-#: models.py:53
+#: models.py:47
 msgid "require delivery notification?"
 msgstr "požadovat doručenku?"
 
-#: models.py:54
+#: models.py:48
 msgid "validity in minutes"
 msgstr "validita v minutách"
 
-#: models.py:55
+#: models.py:49
 msgid "project keyword"
 msgstr "klíčové slovo projektu"
 
-#: models.py:56
+#: models.py:50
 msgid "lower priority"
 msgstr "nižší priorita"
 
-#: models.py:57
+#: models.py:51
 msgid "billing"
 msgstr "billing"
 
-#: models.py:59
+#: models.py:53
 msgid "state"
 msgstr "stav"
 
-#: models.py:96
-msgid "output ATS message"
-msgstr "odchozí ATS zpráva"
-
-#: models.py:97
-msgid "output ATS messages"
-msgstr "odchozí ATS zprávy"
-
-#: models.py:103
+#: models.py:55 models.py:102
 msgid "slug"
 msgstr "slug"
 
-#: models.py:104
+#: models.py:92
+msgid "output ATS message"
+msgstr "odchozí ATS zpráva"
+
+#: models.py:93
+msgid "output ATS messages"
+msgstr "odchozí ATS zprávy"
+
+#: models.py:97
+msgid "send new SMS"
+msgstr "odeslat novou SMS zprávu"
+
+#: models.py:103
 msgid "message body"
 msgstr "tělo zprávy"
 
-#: models.py:111
+#: models.py:110
 msgid "SMS template"
 msgstr "SMS šablona"
 
-#: models.py:112
+#: models.py:111
 msgid "SMS templates"
 msgstr "SMS šablony"
 
-#: sender.py:66
+#: sender.py:67
 msgid "Passed classes do not implement serialize_ats() method: {}"
 msgstr "Předané objekty neimplementují serialize_ats() metodu: {}"
 
-#: sender.py:124
+#: sender.py:128
 msgid "SMS with uniq \"{}\" not found in DB."
 msgstr "SMS s uniq \"{}\" nebyla nalezeny v DB"
 
-#: sender.py:133
+#: sender.py:137
 msgid "ATS response misses status code of SMS with uniq {}"
-msgstr ""
+msgstr "Odpověď ATS neobsahuje stav SMS zprávy s ID {}"
 
-#: sender.py:163
+#: sender.py:196
 #, python-brace-format
 msgid ""
 "SMS message template with slug {slug} does not exist. The message to "
@@ -308,6 +312,23 @@ msgstr ""
 "SMS šablona se slugem {slug} neexistuje. Zpráva pro {recipient} příjemce "
 "nemohla být odeslána."
 
-#: sender.py:167
+#: sender.py:198
 msgid "SMS message template with slug {} does not exist"
 msgstr "SMS šablona se slugem {} neexistuje"
+
+#: cores/forms.py:26
+msgid "Some phone number are not valid. Invalid phone numbers: {}."
+msgstr "Některá ze zadaných telefonních čísel nejsou platná: {}"
+
+#: cores/forms.py:43
+msgid "recipients"
+msgstr "příjemci"
+
+#: cores/views.py:20
+#, python-format
+msgid "The SMS to recipients %(recipients)s was successfully sent."
+msgstr "SMS zprávy příjemcům %(recipients)s byly úspěšně odeslány."
+
+#: cores/views.py:21
+msgid "Please correct the error below."
+msgstr "Prosím opravte chyby uvedené níže"

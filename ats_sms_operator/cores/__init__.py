@@ -5,10 +5,12 @@ from django.conf import settings
 from is_core.main import UIRESTModelISCore
 
 from ats_sms_operator import config
-from ats_sms_operator.sender import send
+
+from .views import OutputATSSMSMessageAddView
 
 
 class InputATSSMSmessageISCore(UIRESTModelISCore):
+
     model = config.get_input_sms_model()
     list_display = ('created_at', 'received_at', 'sender', 'recipient', 'uniq', 'content')
     abstract = True
@@ -19,9 +21,11 @@ class InputATSSMSmessageISCore(UIRESTModelISCore):
 
 
 class OutputATSSMSmesssageISCore(UIRESTModelISCore):
+
     model = config.get_output_sms_model()
     list_display = ('created_at', 'sent_at', 'sender', 'recipient', 'content', 'state')
     abstract = True
+    ui_add_view = OutputATSSMSMessageAddView
     update_permission = False
     delete_permission = False
 
@@ -29,13 +33,6 @@ class OutputATSSMSmesssageISCore(UIRESTModelISCore):
         return (
             super(OutputATSSMSmesssageISCore, self).get_form_fields(request, obj) if obj else ('recipient', 'content')
         )
-
-    def pre_save_model(self, request, obj, form, change):
-        obj.state = (config.ATS_STATES.DEBUG if settings.ATS_SMS_DEBUG and obj.recipient not in config.ATS_WHITELIST
-                     else config.ATS_STATES.PROCESSING)
-
-    def post_save_model(self, request, obj, form, change):
-        send(obj)
 
 
 class SMSTemplateISCore(UIRESTModelISCore):
