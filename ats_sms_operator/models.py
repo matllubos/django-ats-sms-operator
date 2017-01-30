@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import six
 
+from django.conf import settings
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
@@ -11,6 +12,8 @@ from chamber.utils import remove_accent
 
 from ats_sms_operator import config
 from ats_sms_operator.config import ATS_STATES
+
+from ats_sms_operator.utils.compatibility import unescape
 
 
 @python_2_unicode_compatible
@@ -55,6 +58,8 @@ class AbstractOutputATSSMSmessage(SmartModel):
     template_slug = models.SlugField(max_length=100, null=True, blank=True, verbose_name=_('slug'))
 
     def clean_content(self):
+        if getattr(settings, 'ATS_SMS_OPERATOR_UNESCAPE_HTML', True):
+            self.content = unescape(self.content)
         if not config.ATS_USE_ACCENT:
             self.content = six.text_type(remove_accent(six.text_type(self.content)))
 
