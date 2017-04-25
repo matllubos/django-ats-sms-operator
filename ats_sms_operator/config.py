@@ -23,7 +23,7 @@ ATS_USE_ACCENT = getattr(settings, 'ATS_USE_ACCENT', False)
 ATS_WHITELIST = getattr(settings, 'ATS_WHITELIST', ())
 ATS_PROCESSING_TIMEOUT = getattr(settings, 'ATS_PROCESSING_TIMEOUT', 10)
 ATS_UNIQ_PREFIX = getattr(settings, 'ATS_UNIQ_PREFIX', '')  # To mitigate conflicts in uniqs on production and accept
-
+ATS_TEXTID = getattr(settings, 'ATS_TEXTID', '')
 
 def get_input_sms_model():
     return get_model(*getattr(settings, 'ATS_INPUT_SMS_MODEL').split('.'))

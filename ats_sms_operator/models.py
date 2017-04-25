@@ -73,12 +73,12 @@ class AbstractOutputATSSMSmessage(SmartModel):
 
     def serialize_ats(self):
         return """<sms type="text" uniq="{prefix}{uniq}" sender="{sender}" recipient="{recipient}" opmid="{opmid}"
-                      dlr="{dlr}" validity="{validity}" kw="{kw}">
+                      dlr="{dlr}" validity="{validity}" kw="{kw}" textid="{textid}">
                         <body order="0" billing="{billing}">{content}</body>
                   </sms>""".format(prefix=config.ATS_UNIQ_PREFIX, uniq=self.pk, sender=self.sender,
                                    recipient=self.recipient, opmid=self.opmid, dlr=int(self.dlr),
                                    validity=self.validity, kw=self.kw, billing=int(self.billing),
-                                   content=self.ascii_content)
+                                   content=self.ascii_content, textid=config.ATS_TEXTID)
 
     @property
     def ascii_content(self):
