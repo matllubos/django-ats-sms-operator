@@ -34,7 +34,7 @@ def strip_all(txt):
 class OutputSMSTestCase(TestCase):
 
     ATS_SERIALIZED_SMS = """<sms type="text" uniq="{prefix}{uniq}" sender="22222" recipient="+420731545945" opmid=""
-                             dlr="1" validity="60" kw="22222EEEEE">
+                             dlr="1" validity="60" kw="22222EEEEE" textid="{textid}">
                              <body order="0" billing="0">TEXT1</body>
                              </sms>"""
 
@@ -45,11 +45,11 @@ class OutputSMSTestCase(TestCase):
                                 <password>aaaaabbbbbcccccddddd</password>
                             </auth>
                             <sms type="text" uniq="{prefix}{uniq1}" sender="22222" recipient="+420731545945" opmid=""
-                             dlr="1" validity="60" kw="22222EEEEE">
+                             dlr="1" validity="60" kw="22222EEEEE" textid="{textid}">
                                 <body order="0" billing="0">TEXT1</body>
                             </sms>
                             <sms type="text" uniq="{prefix}{uniq2}" sender="22222" recipient="+420777555444" opmid=""
-                             dlr="1" validity="60" kw="22222EEEEE">
+                             dlr="1" validity="60" kw="22222EEEEE" textid="{textid}">
                                 <body order="0" billing="0">TEXT2</body>
                             </sms>
                          </messages>"""
@@ -121,14 +121,14 @@ class OutputSMSTestCase(TestCase):
     def test_should_serialize_sms_message(self):
         sms = OutputSMSFactory(**self.ATS_OUTPUT_SMS1)
         assert_equal(strip_all(sms.serialize_ats()),
-                     strip_all(self.ATS_SERIALIZED_SMS.format(prefix=settings.ATS_UNIQ_PREFIX, uniq=sms.pk)))
+                     strip_all(self.ATS_SERIALIZED_SMS.format(prefix=settings.ATS_UNIQ_PREFIX, uniq=sms.pk, textid=settings.ATS_TEXTID)))
 
     def test_should_serialize_ats_requests(self):
         sms1 = OutputSMSFactory(**self.ATS_OUTPUT_SMS1)
         sms2 = OutputSMSFactory(**self.ATS_OUTPUT_SMS2)
         assert_equal(strip_all(serialize_ats_requests(sms1, sms2)),
                      strip_all(self.ATS_SMS_REQUEST.format(prefix=settings.ATS_UNIQ_PREFIX, uniq1=sms1.pk,
-                                                           uniq2=sms2.pk)))
+                                                           uniq2=sms2.pk, textid=settings.ATS_TEXTID)))
 
     def get_prefixes(self):
         return ('',), (settings.ATS_UNIQ_PREFIX,)
