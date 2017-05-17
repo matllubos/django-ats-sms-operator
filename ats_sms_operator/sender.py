@@ -5,7 +5,6 @@ from itertools import chain
 
 from bs4 import BeautifulSoup
 
-from django.conf import settings
 from django.db import models
 from django.template import Context, Template
 from django.utils import timezone
@@ -15,7 +14,8 @@ from django.utils.translation import ugettext
 from chamber.shortcuts import get_object_or_none, change_and_save, bulk_change_and_save
 
 from ats_sms_operator import logged_requests as requests
-from ats_sms_operator import config
+from ats_sms_operator.config import (settings, ATS_STATES, get_sms_template_model, get_output_sms_model,
+                                     get_sms_template_model)
 
 
 LOGGER = logging.getLogger('ats_sms')
@@ -40,7 +40,7 @@ class DeliveryRequest(object):
 
     def serialize_ats(self):
         return """<dlr uniq="{prefix}{pk}">{prefix}{pk}</dlr>""".format(
-            pk=self.output_sms.pk, prefix=config.ATS_UNIQ_PREFIX)
+            pk=self.output_sms.pk, prefix=settings.UNIQ_PREFIX)
 
 
 class ATSSMSException(Exception):
@@ -68,7 +68,7 @@ def serialize_ats_requests(*ats_serializable_objects):
         )
 
     return ''.join(chain(
-        (header.format(username=config.ATS_USERNAME, password=config.ATS_PASSWORD),),
+        (header.format(username=settings.USERNAME, password=settings.PASSWORD),),
         (request.serialize_ats() for request in ats_serializable_objects),
         (footer,),
     ))
@@ -81,7 +81,7 @@ def send_ats_requests(*ats_serializable_objects):
     requests_xml = serialize_ats_requests(*ats_serializable_objects)
     logged_requests = [request for request in ats_serializable_objects if isinstance(request, models.Model)]
     try:
-        return requests.post(config.ATS_URL, data=requests_xml, headers={'Content-Type': 'text/xml'},
+        return requests.post(settings.URL, data=requests_xml, headers={'Content-Type': 'text/xml'},
                              slug='ATS SMS', related_objects=logged_requests)
     except requests.exceptions.RequestException as e:
         raise SMSSendingError(str(e))
@@ -96,13 +96,13 @@ def parse_response_codes(xml):
     code_tags = soup.find_all('code')
 
     LOGGER.warning(', '.join(
-        [(force_text(config.ATS_STATES.get_label(c))
-          if c in config.ATS_STATES.all
+        [(force_text(ATS_STATES.get_label(c))
+          if c in ATS_STATES.all
           else 'ATS returned an unknown state {}.'.format(c))
          for c in [int(error_code.string) for error_code in code_tags if not error_code.attrs.get('uniq')]],
     ))
 
-    return {int(code.attrs['uniq'].lstrip(config.ATS_UNIQ_PREFIX)): int(code.string)
+    return {int(code.attrs['uniq'].lstrip(settings.UNIQ_PREFIX)): int(code.string)
             for code in code_tags if code.attrs.get('uniq')}
 
 
@@ -119,10 +119,10 @@ def update_sms_states(parsed_response):
     SMS messages state according the received response.
     """
     for uniq, state in parsed_response.items():
-        sms = get_object_or_none(config.get_output_sms_model(), pk=uniq)
+        sms = get_object_or_none(get_output_sms_model(), pk=uniq)
         if sms:
             change_and_save(
-                sms, state=state if state in config.ATS_STATES.all else config.ATS_STATES.LOCAL_UNKNOWN_ATS_STATE,
+                sms, state=state if state in ATS_STATES.all else ATS_STATES.LOCAL_UNKNOWN_ATS_STATE,
                 sent_at=timezone.now()
             )
         else:
@@ -132,7 +132,7 @@ def update_sms_states(parsed_response):
 def update_sms_state_from_response(output_sms, parsed_response):
     if output_sms.pk in parsed_response:
         state = parsed_response[output_sms.pk]
-        output_sms.state = state if state in config.ATS_STATES.all else config.ATS_STATES.LOCAL_UNKNOWN_ATS_STATE
+        output_sms.state = state if state in ATS_STATES.all else ATS_STATES.LOCAL_UNKNOWN_ATS_STATE
         output_sms.sent_at = timezone.now()
     else:
         raise SMSSendingError(ugettext('ATS response misses status code of SMS with uniq {}').format(output_sms.pk))
@@ -147,7 +147,7 @@ def send_and_update_sms_states(*ats_requests):
 
 def send_multiple(*multiple_output_sms):
     mutiple_output_sms_to_sent = [
-        output_sms for output_sms in multiple_output_sms if output_sms.state == config.ATS_STATES.PROCESSING
+        output_sms for output_sms in multiple_output_sms if output_sms.state == ATS_STATES.PROCESSING
     ]
     try:
         parsed_response = send_and_parse_response(*mutiple_output_sms_to_sent)
@@ -156,20 +156,20 @@ def send_multiple(*multiple_output_sms):
                 update_sms_state_from_response(output_sms, parsed_response)
                 output_sms.save()
             except SMSSendingError:
-                change_and_save(output_sms, state = config.ATS_STATES.LOCAL_TO_SEND)
+                change_and_save(output_sms, state = ATS_STATES.LOCAL_TO_SEND)
     except SMSSendingError:
-        bulk_change_and_save(mutiple_output_sms_to_sent, config.ATS_STATES.LOCAL_TO_SEND)
+        bulk_change_and_save(mutiple_output_sms_to_sent, ATS_STATES.LOCAL_TO_SEND)
 
 
 def send(output_sms):
     try:
-        if output_sms.state == config.ATS_STATES.PROCESSING:
+        if output_sms.state == ATS_STATES.PROCESSING:
             parsed_response = send_and_parse_response(output_sms)
             update_sms_state_from_response(output_sms, parsed_response)
             output_sms.save()
         return output_sms
     except SMSSendingError:
-        change_and_save(output_sms, state=config.ATS_STATES.LOCAL_TO_SEND)
+        change_and_save(output_sms, state=ATS_STATES.LOCAL_TO_SEND)
         raise
 
 
@@ -179,17 +179,17 @@ def send_template(recipient, slug='', context=None, **sms_attrs):
     """
     context = context or {}
     try:
-        sms_template = config.get_sms_template_model().objects.get(slug=slug)
-        output_sms = config.get_output_sms_model().objects.create(
+        sms_template = get_sms_template_model().objects.get(slug=slug)
+        output_sms = get_output_sms_model().objects.create(
             recipient=recipient,
             template_slug=slug,
             content=Template(sms_template.body).render(Context(context)),
-            state=(config.ATS_STATES.DEBUG if settings.ATS_SMS_DEBUG and recipient not in config.ATS_WHITELIST
-                   else config.ATS_STATES.PROCESSING),
+            state=(ATS_STATES.DEBUG if settings.DEBUG and recipient not in settings.WHITELIST
+                   else ATS_STATES.PROCESSING),
             **sms_attrs
         )
         return send(output_sms)
-    except config.get_sms_template_model().DoesNotExist:
+    except get_sms_template_model().DoesNotExist:
         LOGGER.error(ugettext('SMS message template with slug {slug} does not exist. '
                               'The message to {recipient} cannot be sent.').format(recipient=recipient, slug=slug))
         raise SMSSendingError(ugettext('SMS message template with slug {} does not exist').format(slug))
