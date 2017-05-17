@@ -10,7 +10,7 @@ import responses
 
 from django.conf import settings
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from germanium.anotations import data_provider, turn_off_auto_now
@@ -37,6 +37,13 @@ class OutputSMSTestCase(TestCase):
                              dlr="1" validity="60" kw="22222EEEEE" textid="{textid}">
                              <body order="0" billing="0">TEXT1</body>
                              </sms>"""
+
+    ATS_SERIALIZED_SMS_WITHOUT_TEXTID = (
+        """<sms type="text" uniq="{prefix}{uniq}" sender="22222" recipient="+420731545945" opmid=""
+           dlr="1" validity="60" kw="22222EEEEE">
+           <body order="0" billing="0">TEXT1</body>
+           </sms>"""
+    )
 
     ATS_SMS_REQUEST = """<?xml version="1.0" encoding="UTF-8" ?>
                          <messages>
@@ -121,22 +128,24 @@ class OutputSMSTestCase(TestCase):
     def test_should_serialize_sms_message(self):
         sms = OutputSMSFactory(**self.ATS_OUTPUT_SMS1)
         assert_equal(strip_all(sms.serialize_ats()),
-                     strip_all(self.ATS_SERIALIZED_SMS.format(prefix=settings.ATS_UNIQ_PREFIX, uniq=sms.pk, textid=settings.ATS_TEXTID)))
+                     strip_all(self.ATS_SERIALIZED_SMS.format(prefix=settings.ATS_SMS_UNIQ_PREFIX, uniq=sms.pk,
+                                                              textid=settings.ATS_SMS_TEXTID)))
 
-    def test_should_serialize_ats_requests(self):
-        sms1 = OutputSMSFactory(**self.ATS_OUTPUT_SMS1)
-        sms2 = OutputSMSFactory(**self.ATS_OUTPUT_SMS2)
-        assert_equal(strip_all(serialize_ats_requests(sms1, sms2)),
-                     strip_all(self.ATS_SMS_REQUEST.format(prefix=settings.ATS_UNIQ_PREFIX, uniq1=sms1.pk,
-                                                           uniq2=sms2.pk, textid=settings.ATS_TEXTID)))
+    @override_settings(ATS_SMS_TEXTID=None)
+    def test_should_serialize_ats_requests_without_textid(self):
+        sms = OutputSMSFactory(**self.ATS_OUTPUT_SMS1)
+        assert_equal(
+            strip_all(sms.serialize_ats()),
+            strip_all(self.ATS_SERIALIZED_SMS_WITHOUT_TEXTID.format(prefix=settings.ATS_SMS_UNIQ_PREFIX, uniq=sms.pk))
+        )
 
     def get_prefixes(self):
-        return ('',), (settings.ATS_UNIQ_PREFIX,)
+        return ('',), (settings.ATS_SMS_UNIQ_PREFIX,)
 
     @responses.activate
     @data_provider(get_prefixes)
     def test_should_send_ats_request_and_parse_response_codes(self, prefix):
-        responses.add(responses.POST, settings.ATS_URL, content_type='text/xml', status=200,
+        responses.add(responses.POST, settings.ATS_SMS_URL, content_type='text/xml', status=200,
                       body=self.ATS_SMS_REQUEST_RESPONSE_SENT.format(prefix=prefix, **self.ATS_TEST_UNIQ))
         sms1 = OutputSMSFactory(pk=self.ATS_TEST_UNIQ['uniq1'], **self.ATS_OUTPUT_SMS1)
         sms2 = OutputSMSFactory(pk=self.ATS_TEST_UNIQ['uniq2'], **self.ATS_OUTPUT_SMS2)
@@ -156,7 +165,7 @@ class OutputSMSTestCase(TestCase):
         def raise_exception(request):
             raise requests.exceptions.HTTPError()
 
-        responses.add_callback(responses.POST, settings.ATS_URL, content_type='text/xml', callback=raise_exception)
+        responses.add_callback(responses.POST, settings.ATS_SMS_URL, content_type='text/xml', callback=raise_exception)
 
         sms1 = OutputSMSFactory(pk=self.ATS_TEST_UNIQ['uniq1'], **self.ATS_OUTPUT_SMS1)
         sms2 = OutputSMSFactory(pk=self.ATS_TEST_UNIQ['uniq2'], **self.ATS_OUTPUT_SMS2)
@@ -165,8 +174,8 @@ class OutputSMSTestCase(TestCase):
 
     @responses.activate
     def test_requests_exception_should_be_caught_and_raised(self):
-        responses.add(responses.POST, settings.ATS_URL, content_type='text/xml', status=200,
-                      body=self.ATS_SMS_REQUEST_RESPONSE_SENT.format(prefix=settings.ATS_UNIQ_PREFIX,
+        responses.add(responses.POST, settings.ATS_SMS_URL, content_type='text/xml', status=200,
+                      body=self.ATS_SMS_REQUEST_RESPONSE_SENT.format(prefix=settings.ATS_SMS_UNIQ_PREFIX,
                                                                      **self.ATS_INVALID_UNIQ))
         sms1 = OutputSMSFactory(pk=self.ATS_TEST_UNIQ['uniq1'], **self.ATS_OUTPUT_SMS1)
         sms2 = OutputSMSFactory(pk=self.ATS_TEST_UNIQ['uniq2'], **self.ATS_OUTPUT_SMS2)
@@ -175,8 +184,8 @@ class OutputSMSTestCase(TestCase):
 
     @responses.activate
     def test_command_should_send_and_update_sms(self):
-        responses.add(responses.POST, settings.ATS_URL, content_type='text/xml', status=200,
-                      body=self.ATS_SMS_REQUEST_RESPONSE_SENT.format(prefix=settings.ATS_UNIQ_PREFIX,
+        responses.add(responses.POST, settings.ATS_SMS_URL, content_type='text/xml', status=200,
+                      body=self.ATS_SMS_REQUEST_RESPONSE_SENT.format(prefix=settings.ATS_SMS_UNIQ_PREFIX,
                                                                      **self.ATS_TEST_UNIQ))
 
         sms1 = OutputSMSFactory(pk=self.ATS_TEST_UNIQ['uniq1'], **self.ATS_OUTPUT_SMS1)
@@ -194,8 +203,9 @@ class OutputSMSTestCase(TestCase):
 
     @responses.activate
     def test_command_should_check_delivery_status(self):
-        responses.add(responses.POST, settings.ATS_URL, content_type='text/xml',
-                      body=self.ATS_SMS_DELIVERY_RESPONSE.format(prefix=settings.ATS_UNIQ_PREFIX, **self.ATS_TEST_UNIQ),
+        responses.add(responses.POST, settings.ATS_SMS_URL, content_type='text/xml',
+                      body=self.ATS_SMS_DELIVERY_RESPONSE.format(prefix=settings.ATS_SMS_UNIQ_PREFIX,
+                                                                 **self.ATS_TEST_UNIQ),
                       status=200)
 
         sms2 = OutputSMSFactory(pk=self.ATS_TEST_UNIQ['uniq2'], sent_at=timezone.now(), state=ATS_STATES.OK,
@@ -209,7 +219,7 @@ class OutputSMSTestCase(TestCase):
         sms2 = OutputSMS.objects.get(pk=sms2.pk)
 
         assert_equal(strip_all(responses.calls[0].request.body),
-                     strip_all(self.ATS_SMS_DELIVERY_REQUEST.format(prefix=settings.ATS_UNIQ_PREFIX,
+                     strip_all(self.ATS_SMS_DELIVERY_REQUEST.format(prefix=settings.ATS_SMS_UNIQ_PREFIX,
                                                                     uniq1=self.ATS_TEST_UNIQ['uniq1'],
                                                                     uniq2=self.ATS_TEST_UNIQ['uniq2'])))
         assert_equal(sms1.state, ATS_STATES.SENT)
@@ -217,7 +227,7 @@ class OutputSMSTestCase(TestCase):
 
     @responses.activate
     def test_sms_template_should_be_immediately_send(self):
-        responses.add(responses.POST, settings.ATS_URL, content_type='text/xml',
+        responses.add(responses.POST, settings.ATS_SMS_URL, content_type='text/xml',
                       body=self.ATS_SINGLE_SMS_REQUEST_RESPONSE_SENT.format(245), status=200)
         sms1 = send_template('+420777111222', slug='test', context={'variable': 'context works'}, pk=245)
 
@@ -235,7 +245,7 @@ class OutputSMSTestCase(TestCase):
 
     @responses.activate
     def test_should_correctly_handle_unknown_ats_state(self):
-        responses.add(responses.POST, settings.ATS_URL, content_type='text/xml',
+        responses.add(responses.POST, settings.ATS_SMS_URL, content_type='text/xml',
                       body=self.ATS_UNKNOW_STATE_RESPONSE, status=200)
         sms1 = OutputSMSFactory(pk=self.ATS_TEST_UNIQ['uniq1'], **self.ATS_OUTPUT_SMS1)
         sms2 = OutputSMSFactory(pk=self.ATS_TEST_UNIQ['uniq2'], **self.ATS_OUTPUT_SMS2)
@@ -269,7 +279,7 @@ class OutputSMSTestCase(TestCase):
         def raise_exception(request):
             raise requests.exceptions.HTTPError()
 
-        responses.add_callback(responses.POST, settings.ATS_URL, content_type='text/xml', callback=raise_exception)
+        responses.add_callback(responses.POST, settings.ATS_SMS_URL, content_type='text/xml', callback=raise_exception)
         assert_raises(SMSSendingError, send_template, '+420777111222', slug='test',
                       context={'variable': 'context works'}, pk=245)
         assert_equal(OutputSMS.objects.get(pk=245).state, ATS_STATES.LOCAL_TO_SEND)

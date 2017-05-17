@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
 
-from django.conf import settings
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 
 from is_core.generic_views.form_views import AddModelFormView
 
-from ats_sms_operator import config
+from ats_sms_operator.config import ATS_STATES, settings
 from ats_sms_operator.sender import send_multiple
 
 from .forms import MultipleOutputSMSModelForm
@@ -28,8 +27,8 @@ class OutputATSSMSMessageAddView(AddModelFormView):
     def save_form(self, form, **kwargs):
         objs = form.save(commit=False)
         for obj in objs:
-            obj.state = (config.ATS_STATES.DEBUG if settings.ATS_SMS_DEBUG and obj.recipient not in config.ATS_WHITELIST
-                         else config.ATS_STATES.PROCESSING)
+            obj.state = (ATS_STATES.DEBUG if settings.DEBUG and obj.recipient not in settings.WHITELIST
+                         else ATS_STATES.PROCESSING)
             obj.save()
         send_multiple(*objs)
         return objs

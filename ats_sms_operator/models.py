@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import six
 
-from django.conf import settings
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
@@ -10,8 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from chamber.models import SmartModel
 from chamber.utils import remove_accent
 
-from ats_sms_operator import config
-from ats_sms_operator.config import ATS_STATES
+from ats_sms_operator.config import ATS_STATES, settings
 
 from ats_sms_operator.utils.compatibility import unescape
 
@@ -58,9 +56,9 @@ class AbstractOutputATSSMSmessage(SmartModel):
     template_slug = models.SlugField(max_length=100, null=True, blank=True, verbose_name=_('slug'))
 
     def clean_content(self):
-        if getattr(settings, 'ATS_SMS_OPERATOR_UNESCAPE_HTML', True):
+        if settings.OPERATOR_UNESCAPE_HTML:
             self.content = unescape(self.content)
-        if not config.ATS_USE_ACCENT:
+        if not settings.USE_ACCENT:
             self.content = six.text_type(remove_accent(six.text_type(self.content)))
 
     def clean_sender(self):
@@ -68,17 +66,22 @@ class AbstractOutputATSSMSmessage(SmartModel):
 
     def _pre_save(self, change, *args, **kwargs):
         super(AbstractOutputATSSMSmessage, self)._pre_save(change, *args, **kwargs)
-        self.sender = self.sender or config.ATS_OUTPUT_SENDER_NUMBER
-        self.kw = self.kw or config.ATS_PROJECT_KEYWORD
+        self.sender = self.sender or settings.OUTPUT_SENDER_NUMBER
+        self.kw = self.kw or settings.PROJECT_KEYWORD
 
     def serialize_ats(self):
-        return """<sms type="text" uniq="{prefix}{uniq}" sender="{sender}" recipient="{recipient}" opmid="{opmid}"
-                      dlr="{dlr}" validity="{validity}" kw="{kw}" textid="{textid}">
-                        <body order="0" billing="{billing}">{content}</body>
-                  </sms>""".format(prefix=config.ATS_UNIQ_PREFIX, uniq=self.pk, sender=self.sender,
-                                   recipient=self.recipient, opmid=self.opmid, dlr=int(self.dlr),
-                                   validity=self.validity, kw=self.kw, billing=int(self.billing),
-                                   content=self.ascii_content, textid=config.ATS_TEXTID)
+        return (
+            """<sms type="text" uniq="{prefix}{uniq}" sender="{sender}" recipient="{recipient}" opmid="{opmid}"
+               dlr="{dlr}" validity="{validity}" kw="{kw}"{extra}>
+               <body order="0" billing="{billing}">{content}</body>
+               </sms>""".format(
+                prefix=settings.UNIQ_PREFIX, uniq=self.pk, sender=self.sender, recipient=self.recipient,
+                opmid=self.opmid, dlr=int(self.dlr), validity=self.validity, kw=self.kw, billing=int(self.billing),
+                content=self.ascii_content, extra=(
+                    ' textid="{textid}"'.format(textid=settings.TEXTID) if settings.TEXTID else ''
+                )
+            )
+        )
 
     @property
     def ascii_content(self):
