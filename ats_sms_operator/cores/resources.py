@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from datetime import datetime
 from itertools import chain
 
-from django.conf import settings
 from django.db import IntegrityError
 from django.utils import timezone
 from django.utils.encoding import force_text
@@ -13,7 +12,7 @@ from chamber.exceptions import PersistenceException
 from bs4 import BeautifulSoup
 from ipware.ip import get_ip
 
-from ats_sms_operator import config
+from ats_sms_operator.config import ATS_STATES, settings, get_input_sms_model
 
 
 # TODO remove the try-except once old is-core does not have to be supported
@@ -57,7 +56,7 @@ class InputATSSMSmessageResource(RESTResource):
 
     def _get_or_create_input_message(self, message):
         try:
-            return config.get_input_sms_model().objects.get_or_create(
+            return get_input_sms_model().objects.get_or_create(
                 received_at=timezone.make_aware(datetime.strptime(message.get('ts'), "%Y-%m-%d %H:%M:%S"),
                                                 timezone.get_default_timezone()),
                 **{k: v for k, v in message.items()
@@ -73,12 +72,12 @@ class InputATSSMSmessageResource(RESTResource):
             input_message, created = self._get_or_create_input_message(message)
             if input_message:
                 self.callback_function(input_message, created)
-                result.append((config.ATS_STATES.DELIVERED, input_message.uniq))
+                result.append((ATS_STATES.DELIVERED, input_message.uniq))
             else:
-                result.append((config.ATS_STATES.NOT_DELIVERED, message.get('uniq', '')))
+                result.append((ATS_STATES.NOT_DELIVERED, message.get('uniq', '')))
 
         return result
 
     def has_post_permission(self, *args, **kwargs):
         return (super(InputATSSMSmessageResource, self).has_post_permission(*args, **kwargs) and
-                (get_ip(self.request) == config.ATS_SMS_SENDER_IP or settings.ATS_SMS_DEBUG))
+                (get_ip(self.request) == settings.SENDER_IP or settings.DEBUG))

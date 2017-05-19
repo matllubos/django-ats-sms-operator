@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.conf import settings as django_settings
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
@@ -13,28 +14,25 @@ except ImportError:
     from django.db.models.loading import get_model
 
 
-ATS_SMS_SENDER_IP = getattr(settings, 'ATS_SMS_SENDER_IP', '80.188.94.234')
-ATS_OUTPUT_SENDER_NUMBER = getattr(settings, 'ATS_OUTPUT_SENDER_NUMBER')
-ATS_PROJECT_KEYWORD = getattr(settings, 'ATS_PROJECT_KEYWORD', 'ERROR')
-ATS_USERNAME = getattr(settings, 'ATS_USERNAME')
-ATS_PASSWORD = getattr(settings, 'ATS_PASSWORD')
-ATS_URL = getattr(settings, 'ATS_URL', 'https://fik.atspraha.cz/gwfcgi/XMLServerWrapper.fcgi')
-ATS_USE_ACCENT = getattr(settings, 'ATS_USE_ACCENT', False)
-ATS_WHITELIST = getattr(settings, 'ATS_WHITELIST', ())
-ATS_PROCESSING_TIMEOUT = getattr(settings, 'ATS_PROCESSING_TIMEOUT', 10)
-ATS_UNIQ_PREFIX = getattr(settings, 'ATS_UNIQ_PREFIX', '')  # To mitigate conflicts in uniqs on production and accept
-ATS_TEXTID = getattr(settings, 'ATS_TEXTID', '')
-
-def get_input_sms_model():
-    return get_model(*getattr(settings, 'ATS_INPUT_SMS_MODEL').split('.'))
-
-
-def get_output_sms_model():
-    return get_model(*getattr(settings, 'ATS_OUTPUT_SMS_MODEL').split('.'))
-
-
-def get_sms_template_model():
-    return get_model(*getattr(settings, 'ATS_SMS_TEMPLATE_MODEL').split('.'))
+DEFAULTS = {
+    'SENDER_IP': '80.188.94.234',
+    'OUTPUT_SENDER_NUMBER': None,
+    'PROJECT_KEYWORD': None,
+    'USERNAME': None,
+    'PASSWORD': None,
+    'URL': 'https://fik.atspraha.cz/gwfcgi/XMLServerWrapper.fcgi',
+    'USE_ACCENT': False,
+    'WHITELIST': (),
+    'PROCESSING_TIMEOUT': 10,
+    'UNIQ_PREFIX': '',  # To mitigate conflicts in uniqs on production and accept
+    'TEXTID': None,
+    'OPERATOR_UNESCAPE_HTML': True,
+    'DEBUG': False,
+    'INPUT_SMS_MODEL': None,
+    'OUTPUT_SMS_MODEL': None,
+    'TEMPLATE_MODEL': None,
+    'DEFAULT_CALLING_CODE': '+420',
+}
 
 
 ATS_STATES = ChoicesNumEnum(
@@ -90,3 +88,28 @@ ATS_STATES = ChoicesNumEnum(
     ('LOCAL_ERROR', _('local error'), -5),
     ('TIMEOUT', _('timeout'), -6),
 )
+
+
+class Settings(object):
+
+    def __getattr__(self, attr):
+        if attr not in DEFAULTS:
+            raise AttributeError('Invalid ATS_SMS setting: "{}"'.format(attr))
+
+        default = DEFAULTS[attr]
+        return getattr(django_settings, 'ATS_SMS_{}'.format(attr), default(self) if callable(default) else default)
+
+
+settings = Settings()
+
+
+def get_input_sms_model():
+    return get_model(*settings.INPUT_SMS_MODEL.split('.'))
+
+
+def get_output_sms_model():
+    return get_model(*settings.OUTPUT_SMS_MODEL.split('.'))
+
+
+def get_sms_template_model():
+    return get_model(*settings.TEMPLATE_MODEL.split('.'))

@@ -3,7 +3,6 @@ from phonenumber_field import phonenumber
 from collections import OrderedDict
 
 from django.forms import CharField, ValidationError
-from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from is_core.forms.widgets import MultipleTextInput
@@ -11,12 +10,14 @@ from is_core.forms.models import SmartModelForm
 
 from chamber.shortcuts import bulk_save
 
+from ats_sms_operator.config import settings
+
 
 def normalize_phone_number(number):
     if number:
         number = number.replace(' ', '').replace('-', '')
         if len(number) == 9:
-            number = ''.join((getattr(settings, 'ATS_SMS_DEFAULT_CALLING_CODE', '+420'), number))
+            number = ''.join((settings.DEFAULT_CALLING_CODE, number))
         elif len(number) == 14 and number.startswith('00'):
             number = '+' + number[2:]
     return number

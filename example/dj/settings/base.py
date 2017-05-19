@@ -191,19 +191,18 @@ CSRF_FAILURE_VIEW = 'is_core.views.csrf.csrf_failure'
 
 PISTON_CORS = True
 
-ATS_INPUT_SMS_MODEL = 'sender.InputSMS'
-ATS_OUTPUT_SMS_MODEL = 'sender.OutputSMS'
+ATS_SMS_INPUT_SMS_MODEL = 'sender.InputSMS'
+ATS_SMS_OUTPUT_SMS_MODEL = 'sender.OutputSMS'
 ATS_SMS_TEMPLATE_MODEL = 'sender.SMSTemplate'
-ATS_USERNAME = 'ats-library'
-ATS_PASSWORD = 'aaaaabbbbbcccccddddd'
-ATS_OUTPUT_SENDER_NUMBER = '22222'
-ATS_PROJECT_KEYWORD = '22222EEEEE'
-ATS_URL = 'http://fik.atspraha.cz/gwfcgi/XMLServerWrapper.fcgi'
+ATS_SMS_USERNAME = 'ats-library'
+ATS_SMS_PASSWORD = 'aaaaabbbbbcccccddddd'
+ATS_SMS_OUTPUT_SENDER_NUMBER = '22222'
+ATS_SMS_PROJECT_KEYWORD = '22222EEEEE'
+ATS_SMS_URL = 'http://fik.atspraha.cz/gwfcgi/XMLServerWrapper.fcgi'
 ATS_SMS_DEBUG = True
-ATS_WHITELIST = ('+420777111222',)
-ATS_UNIQ_PREFIX = 'ACCEPT'
-ATS_TEXTID = 'ABC'
-
+ATS_SMS_WHITELIST = ('+420777111222',)
+ATS_SMS_UNIQ_PREFIX = 'ACCEPT'
+ATS_SMS_TEXTID = 'ABC'
 
 TEMPLATES = [
     {
