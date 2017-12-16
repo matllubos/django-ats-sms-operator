@@ -95,15 +95,20 @@ def parse_response_codes(xml):
     soup = BeautifulSoup(xml, 'html.parser')
     code_tags = soup.find_all('code')
 
-    LOGGER.warning(', '.join(
+    warning_message = ', '.join(
         [(force_text(ATS_STATES.get_label(c))
           if c in ATS_STATES.all
           else 'ATS returned an unknown state {}.'.format(c))
          for c in [int(error_code.string) for error_code in code_tags if not error_code.attrs.get('uniq')]],
-    ))
+    )
 
-    return {int(code.attrs['uniq'].lstrip(settings.UNIQ_PREFIX)): int(code.string)
-            for code in code_tags if code.attrs.get('uniq')}
+    if warning_message:
+        LOGGER.warning(warning_message)
+
+    return {
+        int(code.attrs['uniq'].lstrip(settings.UNIQ_PREFIX)): int(code.string)
+        for code in code_tags if code.attrs.get('uniq')
+    }
 
 
 def send_and_parse_response(*ats_requests):
